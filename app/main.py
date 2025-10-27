@@ -297,61 +297,6 @@ async def search(query: str):
     ]
     return {"results": results}
 # ---------------------------------------------------------------------------
-# Tool: fetch
-# ---------------------------------------------------------------------------
-
-@mcp.tool(name="fetch", description="Retrieve a single row from the table by primary key value. If you do not have the primary key, you can use the search tool to get the id of the row you want to fetch. This will search for the ID across all tables and return the first row that matches.")
-async def fetch(id: str):
-    client = _get_sql_client()
-    # Join all possible tables to pick up the id across all of them, using fully qualified table names
-    statement = f"""
-        SELECT *
-        FROM workspace.gtm.order_items AS oi
-        LEFT JOIN workspace.gtm.customers AS c
-            ON oi.customer_id = c.customer_id
-        LEFT JOIN workspace.gtm.products AS p
-            ON oi.product_id = p.product_id
-        -- Minimal awareness of claims table: join by the input policy_id
-        LEFT JOIN workspace.mcp.insurance_claims_data AS icd
-            ON CAST(icd.policy_id AS STRING) = CAST({id} AS STRING)
-        WHERE
-            oi.id = {id}
-            OR oi.order_id = {id}
-            OR oi.product_id = {id}
-            OR c.customer_id = {id}
-            OR p.product_id = {id}
-            OR CAST(icd.policy_id AS STRING) = CAST({id} AS STRING)
-        LIMIT 1
-    """
-    payload = await client.run(statement)
-    if "result" not in payload:
-        logger.error(f"No 'result' in Databricks SQL response: {payload}")
-        raise HTTPException(status_code=502, detail="No results returned from Databricks SQL API")
-
-    cols = [c["name"] for c in payload["manifest"]["schema"]["columns"]]
-    rows = payload["result"]["data_array"]
-    if "data_array" not in payload["result"]:
-        logger.error(f"No 'data_array' in Databricks SQL response: {payload}")
-        return {
-            "id": str(id),
-            "title": str(id),
-            "text": payload,
-            "metadata": None
-        }
-    
-    if not rows:
-        raise HTTPException(status_code=404, detail="Row not found")
-
-    row_dict = _rows_to_dicts(cols, rows)[0]
-    return {
-        "id": str(id),
-        "title": str(id),
-        "text": json.dumps(row_dict, default=str),
-        "metadata": row_dict
-    }
-
-
-# ---------------------------------------------------------------------------
 # Expose ASGI app
 # ---------------------------------------------------------------------------
 
