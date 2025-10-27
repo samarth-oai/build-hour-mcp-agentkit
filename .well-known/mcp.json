@@ -1,0 +1,49 @@
+{
+    "server_url": "https://databricks-mcp.onrender.com",
+    "tools": {
+      "search": {
+        "name": "search",
+        "description": "Search Unity Catalog tables via SQL",
+        "input_schema": {
+          "type": "object",
+          "properties": {
+            "query": { "type": "string", "description": "Substring to search table names" }
+          },
+          "required": ["query"]
+        },
+        "annotations": {
+          "title": "Search Databricks Tables",
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": true
+        }
+      },
+      "fetch": {
+        "name": "fetch",
+        "description": "Fetch one record from a table for entailment",
+        "input_schema": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Fully qualified table name (catalog.schema.table)"
+            }
+          },
+          "required": ["id"]
+        },
+        "annotations": {
+          "title": "Fetch Databricks Record",
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": true
+        }
+      }
+    },
+    "oauth2": {
+      "authorization_endpoint": "https://accounts.cloud.databricks.com/oidc/oauth2/v1/authorize",
+      "token_endpoint": "https://accounts.cloud.databricks.com/oidc/oauth2/v1/token",
+      "client_id": "b41209d2-69bb-4653-9f6a-f3b8d2b6d01d",
+      "scopes": ["all-apis"]
+    }
+  }
+  
